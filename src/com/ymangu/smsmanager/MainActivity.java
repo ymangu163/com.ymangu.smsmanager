@@ -11,13 +11,15 @@ import android.app.TabActivity;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
+import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 
-public class MainActivity extends TabActivity {
+public class MainActivity extends TabActivity implements OnClickListener {
 
 	private TabHost mTabHost;
 	private View mSlideView;
@@ -48,6 +50,12 @@ public class MainActivity extends TabActivity {
 		
 		mSlideView = findViewById(R.id.slide_view);   // 页签的滑动背景
 		final View llConversation = findViewById(R.id.ll_conversation); //一个页签的布局
+		
+		//设置3个页签的监听事件
+		llConversation.setOnClickListener(this);
+		findViewById(R.id.ll_folder).setOnClickListener(this);
+		findViewById(R.id.ll_group).setOnClickListener(this);
+		
 		/**
 		 * 功能：初始化滑动背景的宽和高
 		 **/
@@ -72,7 +80,7 @@ public class MainActivity extends TabActivity {
 				lp.leftMargin = llConversation.getLeft();
 				mSlideView.setLayoutParams(lp);  //初始化后，设置这个view的布局参数 
 				
-				
+				basicWidth = findViewById(R.id.rl_conversation).getWidth(); //得到一等份的宽度，滑动背景时要用
 			}
 		});
 		
@@ -105,6 +113,52 @@ public class MainActivity extends TabActivity {
 		// 添加页签
 		mTabHost.addTab(newTabSpec);
 		
+	}
+	
+	private int basicWidth = 0;	// 一等分的宽度
+	private int startX = 0;		// 记住上一次移动完成之后的x轴的偏移量
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) {
+		case R.id.ll_conversation: // 切换到会话页签
+			if(!"conversation".equals(mTabHost.getCurrentTabTag())) {
+				mTabHost.setCurrentTabByTag("conversation");  //这就与前面添加的页签联系起来了
+				startTranslateAnimation(startX, 0);
+				startX = 0;
+			}
+			break;
+		case R.id.ll_folder: // 切换到文件夹页签
+			if(!"folder".equals(mTabHost.getCurrentTabTag())) {
+				mTabHost.setCurrentTabByTag("folder");
+				startTranslateAnimation(startX, basicWidth);
+				startX = basicWidth;
+			}
+			break;
+		case R.id.ll_group: // 切换到群组页签
+			if(!"group".equals(mTabHost.getCurrentTabTag())) {
+				mTabHost.setCurrentTabByTag("group");
+				startTranslateAnimation(startX, basicWidth * 2);
+				startX = basicWidth * 2;
+			}
+			break;
+		default:
+			break;
+		
+		}
+		
+		
+	}
+	
+	/**
+	 * 给滑动块执行唯一动画
+	 * @param fromXDelta 开始位移x轴的偏移量,这些值 都是相对于自己的
+	 * @param toXDelta	结束位移x轴的偏移量
+	 */
+	private void startTranslateAnimation(int fromXDelta, int toXDelta) {
+		TranslateAnimation translateAnimation = new TranslateAnimation(fromXDelta, toXDelta, 0, 0); //Y轴不关心
+		translateAnimation.setDuration(300);
+		translateAnimation.setFillAfter(true);// 执行完成后停留在动画结束的位置上
+		mSlideView.startAnimation(translateAnimation);
 	}
 
 
