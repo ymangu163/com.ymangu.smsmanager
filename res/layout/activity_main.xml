@@ -4,42 +4,158 @@
     android:layout_height="fill_parent"
     tools:context=".MainActivity" >
 
-  
-    <TabHost 
+    <TabHost
         android:id="@android:id/tabhost"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"        
-        >
-        <!--加个线性布局，tabcontent就不会把 tabs包含住-->
+        android:layout_height="fill_parent" >
+
+        <!-- 加个线性布局，tabcontent就不会把 tabs包含住 -->
+
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical" >
-        
-        <!-- 页签 -->
-        <TabWidget 
-            android:id="@android:id/tabs"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            <!-- 为整个页签添加一个滑动的背景 -->
+              <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/darker_gray"
+                android:paddingBottom="5dip"
+                android:paddingTop="5dip" >
+                <!-- 设置背景 -->
+               <View
+                    android:id="@+id/slide_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/slide_background" />
             
-            ></TabWidget>
-        <FrameLayout 
-            android:id="@android:id/tabcontent"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            
-            ></FrameLayout>
+
+            <!-- 页签,把它gone掉，替换成我们自己想要的 -->
+
+            <TabWidget
+                android:id="@android:id/tabs"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" >
+            </TabWidget>
+
+            <!-- 自定义页签 ,里面有3个子页签 -->
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" >
+
+                <!-- 一个页签 -->
+
+                <RelativeLayout
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" >
+
+                    <!-- 子页签里有图片和文字 -->
+
+                    <LinearLayout
+                        android:id="@+id/ll_conversation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dip"
+                        android:paddingLeft="15dip"
+                        android:paddingRight="15dip"
+                        android:paddingTop="5dip" >
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/tab_conversation" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dip"
+                            android:text="会话"
+                            android:textColor="@android:color/white" />
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- 一个页签 -->
+
+                <RelativeLayout
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" >
+
+                    <LinearLayout
+                        android:id="@+id/ll_folder"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dip"
+                        android:paddingLeft="10dip"
+                        android:paddingRight="10dip"
+                        android:paddingTop="5dip" >
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/tab_folder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dip"
+                            android:text="文件夹"
+                            android:textColor="@android:color/white" />
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- 一个页签 -->
+
+                <RelativeLayout
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" >
+
+                    <LinearLayout
+                        android:id="@+id/ll_group"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingBottom="5dip"
+                        android:paddingLeft="10dip"
+                        android:paddingRight="10dip"
+                        android:paddingTop="5dip" >
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dip"
+                            android:src="@drawable/tab_group" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dip"
+                            android:text="群组"
+                            android:textColor="@android:color/white" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </LinearLayout>
+           </RelativeLayout>
+
+            <FrameLayout
+                android:id="@android:id/tabcontent"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" >
+            </FrameLayout>
         </LinearLayout>
     </TabHost>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
 </RelativeLayout>
