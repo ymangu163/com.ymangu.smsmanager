@@ -5,6 +5,7 @@ import java.util.HashSet;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,7 +111,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	private final int LIST_STATE = -1;
 	private final int EDIT_STATE = -2;
 	private int currentState = LIST_STATE;		// 当前默认的状态为列表状态
-	private HashSet<Integer> mMultiDeleteSet;
+	private HashSet<Integer> mMultiDeleteSet;	//HashSet有个特点就是值不能重复
 	
 	
 	private void initView() {
@@ -174,10 +176,11 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		public View newView(Context context, Cursor cursor, ViewGroup parent) {
 			View view = View.inflate(context, R.layout.conversation_item, null);
 			mHolder=new ConversationHolderView();
-			mHolder.ivIcon=(ImageView) view.findViewById(R.id.iv_conversation_item_icon);
+			mHolder.ivIcon=(ImageView) view.findViewById(R.id.iv_conversation_item_icon); 
 			mHolder.tvName=(TextView) view.findViewById(R.id.tv_conversation_item_name);
 			mHolder.tvDate=(TextView) view.findViewById(R.id.tv_conversation_item_date);
 			mHolder.tvBody=(TextView) view.findViewById(R.id.tv_conversation_item_body);
+			mHolder.checkBox=(CheckBox) view.findViewById(R.id.cb_conversation_item);
 			view.setTag(mHolder);
 			return view;
 		}
@@ -188,12 +191,27 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		 **/
 		@Override
 		public void bindView(View view, Context context, Cursor cursor) {
-			mHolder=(ConversationHolderView) view.getTag();
-			
+			mHolder=(ConversationHolderView) view.getTag();			
+			int id = cursor.getInt(THREAD_ID_COLUMN_INDEX);
 			String address = cursor.getString(ADDRESS_COLUMN_INDEX);
 			int count = cursor.getInt(COUNT_COLUMN_INDEX);
 			long date = cursor.getLong(DATE_COLUMN_INDEX);
-			String body = cursor.getString(BODY_COLUMN_INDEX);
+			String body = cursor.getString(BODY_COLUMN_INDEX);			
+			
+
+			// 判断当前的状态是否是编辑
+			if(currentState == EDIT_STATE) {
+				// 显示checkbox
+				mHolder.checkBox.setVisibility(View.VISIBLE);
+				
+				// 当前的会话id是否存在与deleteSet集合中
+				mHolder.checkBox.setChecked(mMultiDeleteSet.contains(id));
+			} else {
+				// 隐藏checkbox
+				mHolder.checkBox.setVisibility(View.GONE);
+			}
+			
+			
 			
 			//根据号码查联系人姓名
 			String contactName = Utils.getContactName(getContentResolver(), address);
@@ -278,10 +296,12 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 			break;
 		case EDIT_ID:		// 编辑菜单
 			currentState = EDIT_STATE;
+			refreshState();
 			break;
 		case CANCEL_EDIT_ID:	// 取消编辑
 			currentState = LIST_STATE;
 			mMultiDeleteSet.clear();
+			refreshState();
 			break;
 		default:
 			break;
@@ -290,24 +310,127 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	}
 
 
+	/**
+	 * 刷新状态
+	 * 问1： 我们点击菜单，ListView 会更新吗？（checkBox等视图）
+	 * 答：当Listview的高度等参数变化后  就会去重绘，就会回调CusorAdapter.
+	 */
+	private void refreshState() {
+		if(currentState == EDIT_STATE) {
+			// 新建信息隐藏, 其他按钮显示, 每一个item都要显示一个checkBox 
+			btnNewMessage.setVisibility(View.GONE);
+			btnSelectAll.setVisibility(View.VISIBLE);
+			btnCancelSelect.setVisibility(View.VISIBLE);
+			btnDeleteMessage.setVisibility(View.VISIBLE);
+			
+			if(mMultiDeleteSet.size() == 0) {
+				// 没有选中任何checkbox
+				btnCancelSelect.setEnabled(false);
+				btnDeleteMessage.setEnabled(false);
+			} else {
+				btnCancelSelect.setEnabled(true);
+				btnDeleteMessage.setEnabled(true);
+			}
+			
+			// 全选按钮状态
+			btnSelectAll.setEnabled(mMultiDeleteSet.size()!= (mListView.getCount()-1));
+			Log.d("111", ""+mMultiDeleteSet.size()+"---->   "+mListView.getCount());
+			
+		} else {
+			// 新建信息显示, 其他的隐藏
+			btnNewMessage.setVisibility(View.VISIBLE);
+			btnSelectAll.setVisibility(View.GONE);
+			btnCancelSelect.setVisibility(View.GONE);
+			btnDeleteMessage.setVisibility(View.GONE);
+		}		
+		
+	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		
-		
+				// 把当前被点击的item的会话id添加到集合中, 刷新checkbox
+				Cursor cursor = mAdapter.getCursor();
+				// 移动到当前被点的索引
+				cursor.moveToPosition(position);
+				
+				// 会话的id
+				int thread_id = cursor.getInt(THREAD_ID_COLUMN_INDEX);
+				String address = cursor.getString(ADDRESS_COLUMN_INDEX);
+				
+				if(currentState == EDIT_STATE) {
+					
+					CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_conversation_item);
+					
+					if(checkBox.isChecked()) {
+						// 移除id
+						mMultiDeleteSet.remove(thread_id);
+					} else {
+						mMultiDeleteSet.add(thread_id);
+					}
+					//更改checkBox 状态
+					checkBox.setChecked(!checkBox.isChecked());
+					
+					// 每一次点击刷新一下按钮的状态
+					refreshState();
+				} else {
+//					Intent intent = new Intent(this, ConversationDetailUI.class);
+//					intent.putExtra("thread_id", thread_id);
+//					intent.putExtra("address", address);
+//					startActivity(intent);
+				}
 	}
 
 	@Override
 	public void onClick(View v) {
 		
+		switch (v.getId()) {
+		case R.id.btn_conversation_new_message: // 新建信息
+//			startActivity(new Intent(this, NewMessageUI.class));
+			break;
+		case R.id.btn_conversation_select_all: // 全选
+			Cursor cursor = mAdapter.getCursor();
+			cursor.moveToPosition(-1);		// 复位到初始的位置
+			//把所有的会话id 都加到集合中
+			while(cursor.moveToNext()) {
+				mMultiDeleteSet.add(cursor.getInt(THREAD_ID_COLUMN_INDEX));
+			}
+			mAdapter.notifyDataSetChanged();	// 刷新数据
+			refreshState();
+			break;
+		case R.id.btn_conversation_cancel_select: // 取消选择
+			mMultiDeleteSet.clear();
+			mAdapter.notifyDataSetChanged();	// 刷新数据
+			refreshState();
+			break;
+		case R.id.btn_conversation_delete_message: // 删除信息
+			showConfirmDeleteDialog();
+			break;
+		default:
+			break;
+		}
 		
 		
-		
+	}
+
+	private void showConfirmDeleteDialog() {
+	
+	
 	}	
 		
-		
-			
+	/**
+	 * 功能：按下返回键时的回调函数
+	 **/	
+	@Override
+	public void onBackPressed() {
+		if(currentState == EDIT_STATE) {
+			currentState = LIST_STATE;
+			mMultiDeleteSet.clear();
+			refreshState();
+			return;
+		}
+		super.onBackPressed();		
+	}		
 	
 	
 	
