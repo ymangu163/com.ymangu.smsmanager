@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -235,7 +237,57 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		
 		
 	}
-
+	/**
+	 * 此方法是创建options菜单调用, 只会被调用一次
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(0, SEARCH_ID, 0, "搜索");
+		menu.add(0, EDIT_ID, 0, "编辑");
+		menu.add(0, CANCEL_EDIT_ID, 0, "取消编辑");	
+		
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	/**
+	 * 当菜单将要显示在屏幕上时, 回调此方法
+	 * 控制显示哪一个菜单
+	 */
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		if(currentState == EDIT_STATE) {
+			// 显示取消编辑, 隐藏另外两个
+			menu.findItem(SEARCH_ID).setVisible(false);
+			menu.findItem(EDIT_ID).setVisible(false);
+			menu.findItem(CANCEL_EDIT_ID).setVisible(true);
+		} else {
+			menu.findItem(SEARCH_ID).setVisible(true);
+			menu.findItem(EDIT_ID).setVisible(true);
+			menu.findItem(CANCEL_EDIT_ID).setVisible(false);
+		}
+		return super.onPrepareOptionsMenu(menu);
+	}
+	/**
+	 * 当options菜单被选中时回调
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case SEARCH_ID:		// 搜索菜单被选中
+			
+			break;
+		case EDIT_ID:		// 编辑菜单
+			currentState = EDIT_STATE;
+			break;
+		case CANCEL_EDIT_ID:	// 取消编辑
+			currentState = LIST_STATE;
+			mMultiDeleteSet.clear();
+			break;
+		default:
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
 
 
