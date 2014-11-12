@@ -5,14 +5,12 @@ import android.net.Uri;
 public class Sms {
 	
 	
-	/**
-	 * 查询会话的uri
-	 */
+	/*** 查询会话的uri	 */
 	public static final Uri CONVERSATION_URI = Uri.parse("content://sms/conversations");
-	/**
-	 * 操作SMS表的uri
-	 */
+	/** 操作SMS表的uri	 */
 	public static final Uri SMS_URI = Uri.parse("content://sms/");
+	/*** 操作已发送的uri	 */
+	public static final Uri SENT_URI = Uri.parse("content://sms/sent");
 	
 	
 	

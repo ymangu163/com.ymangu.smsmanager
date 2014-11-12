@@ -9,11 +9,14 @@ import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.CursorAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ymangu.smsmanager.R;
 import com.ymangu.smsmanager.utils.CommonAsyncQuery;
@@ -21,7 +24,7 @@ import com.ymangu.smsmanager.utils.CommonAsyncQuery.OnQueryNotifyCompleteListene
 import com.ymangu.smsmanager.utils.Sms;
 import com.ymangu.smsmanager.utils.Utils;
 
-public class ConversationDetailUI extends Activity  implements OnQueryNotifyCompleteListener{
+public class ConversationDetailUI extends Activity  implements OnQueryNotifyCompleteListener, OnClickListener{
 	
 	private ConversationDetailAdapter mAdapter;
 
@@ -49,6 +52,8 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 	private final int TYPE_COLUMN_INDEX = 3;
 	private int thread_id;
 	private ListView mListView;
+	private EditText etContent;
+	private String address;
 
 	
 	private void prepareData() {
@@ -64,6 +69,10 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 
 	private void initView() {
 		mListView = (ListView) findViewById(R.id.lv_conversation_detail_sms);
+		etContent = (EditText) findViewById(R.id.et_conversation_detail_content);
+		findViewById(R.id.btn_conversation_detail_send).setOnClickListener(this);
+		findViewById(R.id.btn_conversation_detail_back).setOnClickListener(this);
+		
 		mAdapter = new ConversationDetailAdapter(this, null);
 		mListView.setAdapter(mAdapter);
 		
@@ -76,7 +85,7 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 	private void initTitle() {
 		Intent intent=getIntent();
 		thread_id = intent.getIntExtra("thread_id", -1);
-		String address=intent.getStringExtra("address");
+		address = intent.getStringExtra("address");
 		
 		String contactName = Utils.getContactName(getContentResolver(), address);
 		TextView tvName=(TextView) findViewById(R.id.tv_conversation_detail_name);
@@ -97,7 +106,9 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 			super(context, c);
 		}
 		
-		/***  当游标结果集内容改变时回调.  */
+		/***  当游标结果集内容改变时回调. 
+		 *  发送短信后，滚动到最后
+		 *  */
 		@Override
 		protected void onContentChanged() {
 			super.onContentChanged();  // 执行完成之后, 数据才更新到adapter
@@ -185,6 +196,30 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 	@Override
 	public void onPostNotify(int token, Object cookie, Cursor cursor) {
 		mListView.setSelection(mListView.getCount());
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.btn_conversation_detail_back:
+			finish();
+			break;
+		case R.id.btn_conversation_detail_send:
+			String content = etContent.getText().toString();
+			if(TextUtils.isEmpty(content)) {
+				Toast.makeText(this, "请输入短信内容", 0).show();
+				break;
+			}
+			//发送短信
+			Utils.sendMessage(this, address, content);
+			//发送完后，清空短信的内容
+			etContent.setText("");
+			break;
+		default:
+			break;
+		}
+		
+		
 	}
 	
 	

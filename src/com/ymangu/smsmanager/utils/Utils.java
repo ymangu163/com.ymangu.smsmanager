@@ -1,15 +1,21 @@
 package com.ymangu.smsmanager.utils;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.PhoneLookup;
+import android.telephony.SmsManager;
 import android.util.Log;
 
 public class Utils {
@@ -75,6 +81,46 @@ public class Utils {
 	}
 	
 	
+	/**
+	 * 发送短信
+	 */
+	public static void sendMessage(Context context, String address, String content) {
+		SmsManager smsManager = SmsManager.getDefault();
+		
+		// 以70个字符分割短信
+		ArrayList<String> divideMessage = smsManager.divideMessage(content);
+		
+		// 必须设置为隐士intent
+		Intent intent = new Intent("com.ymangu.smsmanager.receiver.ReceiveSmsBroadcastReceive");
+		
+		PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, 
+				intent, PendingIntent.FLAG_ONE_SHOT);
+		
+		for (String sms : divideMessage) {
+			smsManager.sendTextMessage(
+					address, 	// 接收人的号码 
+					null, 		// 短信中心的号码
+					sms, 		// 短信的内容
+					sentIntent, // 发送成功的回调广播，回调方式：延期意图(延期意图指向的是广播接收者)
+					null); 		// 接收成功的回调广播
+		}
+		
+		// 把 发出的短信 插入到数据库
+		writeMessage(context, address, content);
+	}
+
+	private static void writeMessage(Context context, String address,
+			String content) {
+		ContentValues values=new ContentValues();
+		values.put("address", address);
+		values.put("body", content);		
+		context.getContentResolver().insert(Sms.SENT_URI, values);
+		
+		
+		
+		
+		
+	}
 	
 	
 	
