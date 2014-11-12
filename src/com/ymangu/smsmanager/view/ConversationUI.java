@@ -6,7 +6,12 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.text.format.DateFormat;
+import android.text.format.DateUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -22,6 +27,7 @@ import android.widget.TextView;
 import com.ymangu.smsmanager.R;
 import com.ymangu.smsmanager.utils.CommonAsyncQuery;
 import com.ymangu.smsmanager.utils.Sms;
+import com.ymangu.smsmanager.utils.Utils;
 /**
  *  在手机的 /data/data/com.android.providers.telephony/databases 下找到mmssms.db 短信数据库
  *  查找哪些列呢？
@@ -153,7 +159,8 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	 *  ② 只要数据库一改变，cursor 自动更新，完全自动 的，不需要我们做任务操作
 	 **/	
 	class ConversationAdapter extends CursorAdapter{
-		private ConversationHolderView mHolder;  
+		private ConversationHolderView mHolder;
+		private String strDate;  
 		public ConversationAdapter(Context context, Cursor c) {
 			super(context, c); 			
 		}
@@ -172,6 +179,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 			view.setTag(mHolder);
 			return view;
 		}
+		
 		/**
 		 * 功能：绑定数据
 		 *  view 为 newView()返回的view
@@ -181,9 +189,39 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 			mHolder=(ConversationHolderView) view.getTag();
 			
 			String address = cursor.getString(ADDRESS_COLUMN_INDEX);
+			int count = cursor.getInt(COUNT_COLUMN_INDEX);
+			long date = cursor.getLong(DATE_COLUMN_INDEX);
+			String body = cursor.getString(BODY_COLUMN_INDEX);
 			
+			//根据号码查联系人姓名
+			String contactName = Utils.getContactName(getContentResolver(), address);
+			if(TextUtils.isEmpty(contactName)){
+				//显示号码
+				mHolder.tvName.setText(address+"("+count+")");
+				mHolder.ivIcon.setBackgroundResource(R.drawable.ic_unknow_contact_picture);
+			}else{
+				//显示名称
+				mHolder.tvName.setText(contactName+"("+count+")");
+				
+				//根据号码查询联系人头像
+				Bitmap contactIcon=Utils.getContactIcon(getContentResolver(), address);
+				if(contactIcon!=null){
+					mHolder.ivIcon.setBackgroundDrawable(new BitmapDrawable(contactIcon));
+				}else{
+					mHolder.ivIcon.setBackgroundResource(R.drawable.ic_contact_picture);
+				}
+			}
+			if(DateUtils.isToday(date)){
+				strDate = DateFormat.getTimeFormat(context).format(date);
+				
+			}else{
+				//显示日期
+				strDate = DateFormat.getDateFormat(context).format(date);
+				
+			}
+			mHolder.tvDate.setText(strDate);
+			mHolder.tvBody.setText(body);
 			
-			mHolder.tvName.setText(address);
 		}
 		
 		
