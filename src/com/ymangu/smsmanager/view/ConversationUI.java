@@ -1,15 +1,20 @@
 package com.ymangu.smsmanager.view;
 
 import java.util.HashSet;
+import java.util.Iterator;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
@@ -412,12 +417,95 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		
 		
 	}
-
+	protected static final String TAG = "ConversationUI";
+	/**
+	 * 确认删除对话框
+	 */
 	private void showConfirmDeleteDialog() {
-	
-	
+		AlertDialog.Builder builder = new Builder(this);
+		builder.setIcon(android.R.drawable.ic_dialog_alert);		// 设置图标
+		builder.setTitle("删除");
+		builder.setMessage("确认删除选中的会话吗?");
+		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Log.i(TAG, "确认删除");
+				
+				// 弹出进度对话框
+				showDeleteProgressDialog();
+				isStop = false;
+				// 开启子线程, 真正删除短信, 每删除一条短信, 更新进度条
+				new Thread(new DeleteRunnable()).start();
+			}
+		});
+		builder.setNegativeButton("Cancel", null);
+		builder.show();	
 	}	
 		
+	// 删除会话
+	class DeleteRunnable implements Runnable{
+
+		@Override
+		public void run() {
+			Iterator<Integer> iterator=mMultiDeleteSet.iterator();
+			int thread_id;
+			String where;
+			String[] selectionArgs;
+			while(iterator.hasNext()){
+				thread_id=iterator.next();
+				where="thread_id=?";
+				selectionArgs=new String[] {String.valueOf(thread_id)};
+				getContentResolver().delete(Sms.SMS_URI, where, selectionArgs);
+				SystemClock.sleep(1000);
+				
+				//更新进度条
+				mProgressDialog.incrementProgressBy(1);
+				
+			}
+			//全部删除完后的操作
+			mMultiDeleteSet.clear();
+			mProgressDialog.dismiss();
+			
+		}
+	}
+	
+	
+	
+	
+	
+	/**
+	 * 弹出删除进度对话框
+	 */
+	@SuppressWarnings("deprecation")
+	protected void showDeleteProgressDialog() {
+		mProgressDialog = new ProgressDialog(this);
+		// 设置最大值
+		mProgressDialog.setMax(mMultiDeleteSet.size());
+		// 设置进度条的演示为长条
+		mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		mProgressDialog.setButton("取消", new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Log.i(TAG, "终止删除");
+				isStop = true;
+			}
+		});
+		mProgressDialog.show();
+		//对话框关闭事件的监听
+		mProgressDialog.setOnDismissListener(new OnDismissListener() {
+			
+			@Override
+			public void onDismiss(DialogInterface dialog) {
+				currentState = LIST_STATE;
+				refreshState();
+			}
+		});
+		
+		
+	}
+
 	/**
 	 * 功能：按下返回键时的回调函数
 	 **/	
