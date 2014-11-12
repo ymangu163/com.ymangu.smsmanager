@@ -28,8 +28,9 @@
             </intent-filter>
         </activity>
         <activity android:name="com.ymangu.smsmanager.view.ConversationUI" ></activity>
-        <activity android:name=".view.FolderUI" ></activity>
-        <activity android:name=".view.GroupUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.view.FolderUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.view.GroupUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.ConversationDetailUI" ></activity>
     </application>
 
 </manifest>

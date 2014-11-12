@@ -10,6 +10,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -379,10 +380,10 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 					// 每一次点击刷新一下按钮的状态
 					refreshState();
 				} else {
-//					Intent intent = new Intent(this, ConversationDetailUI.class);
-//					intent.putExtra("thread_id", thread_id);
-//					intent.putExtra("address", address);
-//					startActivity(intent);
+					Intent intent = new Intent(this, ConversationDetailUI.class);
+					intent.putExtra("thread_id", thread_id);
+					intent.putExtra("address", address);
+					startActivity(intent);
 				}
 	}
 
