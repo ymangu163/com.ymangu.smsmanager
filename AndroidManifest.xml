@@ -39,6 +39,8 @@
                 <action android:name="com.ymangu.smsmanager.receiver.ReceiveSmsBroadcastReceive"/>
             </intent-filter>
         </receiver>
+        <provider android:name=".provider.GroupContentProvider"
+            android:authorities="com.ymangu.smsmanager.provider.GroupContentProvider"></provider>
     </application>
 
 </manifest>
