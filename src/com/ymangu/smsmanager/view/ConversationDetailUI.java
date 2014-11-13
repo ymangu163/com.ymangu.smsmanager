@@ -164,13 +164,10 @@ public class ConversationDetailUI extends Activity  implements OnQueryNotifyComp
 				
 				mHolder.tvSendBody.setText(body);
 				mHolder.tvSendDate.setText(strDate);
-			}
-			
+			}			
 			
 		}
-		
-		
-		
+				
 		
 		public class ConversationDetailViewHolder{
 			public View receiveView;

@@ -392,7 +392,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		
 		switch (v.getId()) {
 		case R.id.btn_conversation_new_message: // 新建信息
-//			startActivity(new Intent(this, NewMessageUI.class));
+			startActivity(new Intent(this, NewMessageUI.class));
 			break;
 		case R.id.btn_conversation_select_all: // 全选
 			Cursor cursor = mAdapter.getCursor();

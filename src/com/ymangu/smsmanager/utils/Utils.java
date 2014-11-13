@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.SmsManager;
@@ -120,6 +121,44 @@ public class Utils {
 		
 		
 		
+	}
+	/**
+	 * 根据给定的uri查询联系人的id
+	 * @param resolver
+	 * @param uri 联系人的uri
+	 * @return 如果返回-1, 代表当前联系人没有添加号码
+	 */
+	public static long getContactID(ContentResolver contentResolver, Uri uri) {
+		
+		Cursor cursor = contentResolver.query(uri, new String[]{"_id", "has_phone_number"}, null, null, null);
+		if(cursor != null && cursor.moveToFirst()) {
+			int hasPhoneNumber = cursor.getInt(1);
+			if(hasPhoneNumber > 0) {
+				long id = cursor.getLong(0);
+				cursor.close();
+				return id;
+			}
+		}		
+		return -1;
+	}
+
+	/**
+	 * 根据联系人的id获取联系人的号码
+	 */
+	public static String getContactAddress(ContentResolver contentResolver,
+			long id) {
+		String selection = "contact_id = ?";
+		String selectionArgs[] = {String.valueOf(id)};
+		//Phone.CONTENT_URI 所有联系人的信息
+		Cursor cursor = contentResolver.query(Phone.CONTENT_URI, new String[]{"data1"}, selection, selectionArgs, null);
+//		Utils.printCursor(cursor);   //把信息打印出来
+		if(cursor != null && cursor.moveToFirst()) {
+			String address = cursor.getString(0);
+			cursor.close();
+			return address;
+		}		
+		
+		return null;
 	}
 	
 	
