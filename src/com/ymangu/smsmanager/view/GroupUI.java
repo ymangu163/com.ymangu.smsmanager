@@ -7,10 +7,13 @@ import android.app.ListActivity;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +23,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -150,11 +154,157 @@ public class GroupUI extends ListActivity implements OnItemClickListener, OnItem
 	@Override
 	public boolean onItemLongClick(AdapterView<?> parent, View view,
 			int position, long id) {
-		return false;
+		Cursor cursor = (Cursor) mAdapter.getItem(position);
+		String group_id = cursor.getString(cursor.getColumnIndex("_id"));
+		
+		showOperatorDialog(group_id);
+		return true;
 	}
+	
+	
+	/**
+	 * 弹出操作对话框
+	 */
+	private void showOperatorDialog(final String group_id) {
+		AlertDialog.Builder builder = new Builder(this);
+		builder.setItems(new String[]{"修改", "删除"}, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if(which == 0) {
+					Log.i("111", "修改");
+					// 弹出一个修改对话框
+					showUpdateGroupDialog(group_id);
+				} else {
+					Log.i("111", "删除");
+					showDeleteGroupDialog(group_id);
+				}
+			}
+
+		});
+		builder.show();		
+		
+	}
+	/**
+	 * 确定删除指定群组id的群组
+	 * @param group_id
+	 */
+	private void showDeleteGroupDialog(final String group_id) {
+		AlertDialog.Builder builder = new Builder(this);
+		builder.setIcon(android.R.drawable.ic_dialog_alert);
+		builder.setTitle("删除");
+		builder.setMessage("删除群组将会删除群组中所包含的所有短信的关联, 确认继续?");
+		builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				deleteGroup(group_id);
+			}
+		});
+		builder.setNegativeButton("取消", null);
+		builder.show();
+	}
+	
+	
+	/**
+	 * 删除群组
+	 * @param group_id
+	 */
+	private void deleteGroup(String group_id) {
+		
+		Uri uri = ContentUris.withAppendedId(Sms.GROUPS_SINGLE_DELETE_URI, Long.valueOf(group_id));
+		
+		int count = getContentResolver().delete(uri, null, null);
+		if(count > 0) {
+			Toast.makeText(this, "删除成功", 0).show();
+		} else {
+			Toast.makeText(this, "删除失败", 0).show();
+		}
+	}
+	
+	protected void showUpdateGroupDialog(final String group_id) {
+		AlertDialog.Builder builder = new Builder(this);
+		builder.setTitle("修改群组");
+		final AlertDialog updateGroupDialog = builder.create();
+		
+		View view = View.inflate(this, R.layout.create_group_layout, null);
+		final EditText etName = (EditText) view.findViewById(R.id.et_create_group_name);
+		Button btnCreateGroup = (Button) view.findViewById(R.id.btn_create_group);
+		btnCreateGroup.setText("确认修改");
+		btnCreateGroup.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// 更新群组
+				String group_name = etName.getText().toString();
+				if(!TextUtils.isEmpty(group_name)) {
+					updateGroup(group_id, group_name);
+					updateGroupDialog.dismiss();
+				}
+			}
+		});
+		updateGroupDialog.setView(view, 0, 0, 0, 0);
+		updateGroupDialog.show();
+		
+		LayoutParams lp = updateGroupDialog.getWindow().getAttributes();
+		lp.width = (int) (getWindowManager().getDefaultDisplay().getWidth() * 0.7);
+		updateGroupDialog.getWindow().setAttributes(lp);
+		
+	}
+	
+	/**
+	 * 更新群组
+	 * @param group_id
+	 * @param group_name
+	 */
+	private void updateGroup(String group_id, String group_name) {
+		ContentValues values = new ContentValues();
+		values.put("group_name", group_name);
+		String where = "_id = " + group_id;
+		int count = getContentResolver().update(Sms.GROUPS_UPDATE_URI, values, where, null);
+		if(count > 0) {
+			Toast.makeText(this, "修改成功", 0).show();
+		} else {
+			Toast.makeText(this, "修改失败", 0).show();
+		}
+	}
+	
+	
+	
+	
+	
+	
+	/**
+	 *  ListView item 点击响应
+	 **/
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
+		// 把当前点击的群组的在关联关系表中所有的会话id取出来
+		Cursor cursor=(Cursor) mAdapter.getItem(position);
+		String group_id=cursor.getString(cursor.getColumnIndex("_id"));
+		String group_name=cursor.getString(cursor.getColumnIndex("group_name"));
+		
+		String selection="group_id= "+group_id;
+		Cursor c=getContentResolver().query(Sms.THREAD_GROUP_QUERY_ALL_URI, 
+				new String[]{"thread_id"}, selection, null, null);
+				
+		if(c != null && c.getCount() > 0) {
+			StringBuilder sb = new StringBuilder("(");
+			while(c.moveToNext()) {
+				sb.append(c.getString(0) + ", ");
+			}
+			c.close();
+			
+			// (1, 2, 3)
+			String threadIDs = sb.substring(0, sb.lastIndexOf(", ")) + ")";
+			// 把会话id传递给会话页面
+			Intent intent = new Intent(this, ConversationUI.class);
+			intent.putExtra("title", group_name);
+			intent.putExtra("threadIDs", threadIDs);
+			startActivity(intent);
+			
+		}
 		
 	}
 	

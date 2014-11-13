@@ -7,6 +7,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
@@ -14,6 +16,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -27,12 +30,14 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ymangu.smsmanager.R;
 import com.ymangu.smsmanager.utils.CommonAsyncQuery;
@@ -59,7 +64,7 @@ import com.ymangu.smsmanager.utils.Utils;
  * ⑤ 调用刷新之后，就会调用 cursorAdapter 中的newView和bindView方法来回的去绑定数据
  * 
  **/
-public class ConversationUI extends Activity implements OnItemClickListener, OnClickListener {
+public class ConversationUI extends Activity implements OnItemClickListener, OnClickListener, OnItemLongClickListener {
 	
 	//CursorAdapter 必须有一列名字是"_id"
 	private String[] projection = {
@@ -140,7 +145,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 		mAdapter = new ConversationAdapter(this, null);
 		mListView.setAdapter(mAdapter);
 		mListView.setOnItemClickListener(this);
-		
+		mListView.setOnItemLongClickListener(this);
 		
 	}
 
@@ -519,7 +524,112 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 			return;
 		}
 		super.onBackPressed();		
-	}		
+	}
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> parent, View view,
+			int position, long id) {
+		
+		// 判断的当前会话是否添加过群组
+		Cursor cursor = (Cursor) mAdapter.getItem(position);
+		String thread_id = cursor.getString(THREAD_ID_COLUMN_INDEX);
+
+		String groupName = getGroupName(thread_id);
+		if (!TextUtils.isEmpty(groupName)) {
+			Toast.makeText(this, "该会话已经存放在\"" + groupName + "\"中", 0).show();
+		} else {
+			// 弹出选择群组对话框
+			showSelectGroupDialog(thread_id);
+		}
+		return true;
+		
+		
+		
+	}
+	/**
+	 * 弹出选择群组的对话框
+	 * @param thread_id
+	 */
+	private void showSelectGroupDialog(final String thread_id) {
+		AlertDialog.Builder builder = new Builder(this);
+		builder.setTitle("选择将要加入的群组");
+		// 查出所有的群组
+		Cursor cursor = getContentResolver().query(Sms.GROUPS_QUERY_ALL_URI, null, null, null, null);
+		if(cursor != null && cursor.getCount() > 0) {
+			final String[] groupNameArray = new String[cursor.getCount()];
+			final String[] groupIDArray = new String[cursor.getCount()];
+			
+			while(cursor.moveToNext()) {
+				groupIDArray[cursor.getPosition()] = cursor.getString(cursor.getColumnIndex("_id"));
+				groupNameArray[cursor.getPosition()] = cursor.getString(cursor.getColumnIndex("group_name"));
+			}
+			
+			builder.setItems(groupNameArray, new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+//					Log.i(TAG, "当前选中的群组是: " + groupNameArray[which]);
+					
+					// 把当前会话添加到选中的群组中
+					addGroup(groupIDArray[which], thread_id);
+				}
+			});
+			builder.show();
+		}
+	
+		
+		
+	}
+	/**
+	 * 添加到群组
+	 * @param group_id
+	 * @param thread_id
+	 */
+	private void addGroup(String group_id, String thread_id) {
+		// 往关联关系表中添加一条数据
+		ContentValues values = new ContentValues();
+		values.put("group_id", group_id);
+		values.put("thread_id", thread_id);
+		Uri uri = getContentResolver().insert(Sms.THREAD_GROUP_INSERT_URI, values);
+		
+		if(ContentUris.parseId(uri) != -1) {
+			Toast.makeText(this, "添加成功", 0).show();
+		} else {
+			Toast.makeText(this, "添加失败", 0).show();
+		}
+	}
+	
+	
+	
+	
+	/**
+	 * 根据会话的id获取群组的名称
+	 * @param thread_id
+	 * @return
+	 */
+	private String getGroupName(String thread_id) {
+		// 根据会话的id获取群组的id 
+		String selection = "thread_id = " + thread_id;
+		Cursor cursor = getContentResolver().query(Sms.THREAD_GROUP_QUERY_ALL_URI, new String[]{"group_id"}, 
+				selection, null, null);
+		if(cursor != null && cursor.moveToFirst()) {
+			String groupId = cursor.getString(0);
+			cursor.close();
+			//如果群组id不为null
+			if(!TextUtils.isEmpty(groupId)) {
+				// 取群组表中把对应名称取出
+				selection = "_id = " + groupId;
+				cursor = getContentResolver().query(Sms.GROUPS_QUERY_ALL_URI, new String[]{"group_name"}, 
+						selection, null, null);
+				if(cursor != null && cursor.moveToFirst()) {
+					String groupName = cursor.getString(0);
+					return groupName;
+				}
+			}
+		}
+		return null;
+	}
+	
 	
 	
 	
