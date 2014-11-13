@@ -33,6 +33,7 @@
         <activity android:name="com.ymangu.smsmanager.view.ConversationDetailUI" ></activity>
         <activity android:name=".view.NewMessageUI"></activity>
         <activity android:name=".view.FolderDetailUI"></activity>
+        <activity android:name=".view.SmsDetailUI"></activity>
         <receiver android:name=".receiver.ReceiveSmsBroadcastReceive">
             <intent-filter>
                 <action android:name="com.ymangu.smsmanager.receiver.ReceiveSmsBroadcastReceive"/>
