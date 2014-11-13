@@ -9,9 +9,26 @@ public class Sms {
 	public static final Uri CONVERSATION_URI = Uri.parse("content://sms/conversations");
 	/** 操作SMS表的uri	 */
 	public static final Uri SMS_URI = Uri.parse("content://sms/");
-	/*** 操作已发送的uri	 */
+
+	/**
+	 * 收件箱的uri
+	 */
+	public static final Uri INBOX_URI = Uri.parse("content://sms/inbox");
+	
+	/**
+	 * 发件箱的uri
+	 */
+	public static final Uri OUTBOX_URI = Uri.parse("content://sms/outbox");
+	
+	/**
+	 * 已发送的uri
+	 */
 	public static final Uri SENT_URI = Uri.parse("content://sms/sent");
 	
+	/**
+	 * 草稿箱的uri
+	 */
+	public static final Uri DRAFT_URI = Uri.parse("content://sms/draft");
 	
 	
 	

@@ -147,7 +147,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	/**
 	 * 异步查询数据 ,查询完后 会跳到 asyncQuery.onQueryComplete()
 	 * startQuery(int token, Object cookie, Uri uri, String[] projection, String selection, String[] selectionArgs, String orderBy)
-	 * token	令牌
+	 * token	令牌, 第几次查询
 	 * cookie	传一个adapter
 	 * uri		去哪查询数据
 	 * projection	查询哪些列

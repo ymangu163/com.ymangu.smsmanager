@@ -162,5 +162,26 @@ public class Utils {
 	}
 	
 	
+	/**
+	 * 根据索引返回指定的uri
+	 */
+	public static Uri getUriFromIndex(int position) {
+		switch (position) {
+		case 0:
+			return Sms.INBOX_URI;
+		case 1:
+			return Sms.OUTBOX_URI;
+		case 2:
+			return Sms.SENT_URI;
+		case 3:
+			return Sms.DRAFT_URI;
+		default:
+			break;
+		}
+		return null;
+	}
+	
+	
+	
 	
 }

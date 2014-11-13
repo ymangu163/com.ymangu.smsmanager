@@ -28,10 +28,11 @@
             </intent-filter>
         </activity>
         <activity android:name="com.ymangu.smsmanager.view.ConversationUI" ></activity>
-        <activity android:name="com.ymangu.smsmanager.view.view.FolderUI" ></activity>
-        <activity android:name="com.ymangu.smsmanager.view.view.GroupUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.FolderUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.GroupUI" ></activity>
         <activity android:name="com.ymangu.smsmanager.view.ConversationDetailUI" ></activity>
         <activity android:name=".view.NewMessageUI"></activity>
+        <activity android:name=".view.FolderDetailUI"></activity>
         <receiver android:name=".receiver.ReceiveSmsBroadcastReceive">
             <intent-filter>
                 <action android:name="com.ymangu.smsmanager.receiver.ReceiveSmsBroadcastReceive"/>
