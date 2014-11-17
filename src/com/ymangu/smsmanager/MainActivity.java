@@ -4,7 +4,6 @@ package com.ymangu.smsmanager;
 import com.ymangu.smsmanager.view.ConversationUI;
 import com.ymangu.smsmanager.view.FolderUI;
 import com.ymangu.smsmanager.view.GroupUI;
-
 import android.os.Bundle;
 
 import android.app.TabActivity;

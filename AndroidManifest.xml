@@ -27,13 +27,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.ymangu.smsmanager.view.ConversationUI" ></activity>
+        <activity android:name="com.ymangu.smsmanager.view.ConversationUI" >
+            <!--指定我们要激活的是哪个  SearchableActivity -->
+            <!-- 把下面的放在 <application> 中就可全局搜索 -->
+            <meta-data
+                android:name="android.app.default_searchable"
+                android:value=".view.SearchableActivity" />            
+        </activity>
         <activity android:name="com.ymangu.smsmanager.view.FolderUI" ></activity>
         <activity android:name="com.ymangu.smsmanager.view.GroupUI" ></activity>
         <activity android:name="com.ymangu.smsmanager.view.ConversationDetailUI" ></activity>
         <activity android:name=".view.NewMessageUI"></activity>
         <activity android:name=".view.FolderDetailUI"></activity>
         <activity android:name=".view.SmsDetailUI"></activity>
+        <!-- 使用系统的框架搜索 -->
+        <activity android:name=".view.SearchableActivity">
+           <intent-filter>
+               <action android:name="android.intent.action.SEARCH" />
+           </intent-filter>
+           <meta-data android:name="android.app.searchable"
+                   android:resource="@xml/searchable"/>
+        </activity>
+        
         <receiver android:name=".receiver.ReceiveSmsBroadcastReceive">
             <intent-filter>
                 <action android:name="com.ymangu.smsmanager.receiver.ReceiveSmsBroadcastReceive"/>
@@ -41,6 +56,8 @@
         </receiver>
         <provider android:name=".provider.GroupContentProvider"
             android:authorities="com.ymangu.smsmanager.provider.GroupContentProvider"></provider>
+         <provider android:name=".provider.SearchableProvider"
+            android:authorities="com.ymangu.smsmanager.provider.SearchableProvider" ></provider>
     </application>
 
 </manifest>

@@ -162,9 +162,18 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	 */
 	private void prepareData() {
 		CommonAsyncQuery asyncQuery = new CommonAsyncQuery(getContentResolver());
-		asyncQuery.startQuery(0, mAdapter, Sms.CONVERSATION_URI, projection, null, null, "date desc"); 
-	}
 		
+		String selection = null;
+		Intent intent = getIntent();
+		String title = intent.getStringExtra("title");
+		if(!TextUtils.isEmpty(title)) {
+			setTitle(title);
+			String threadIDs = intent.getStringExtra("threadIDs");
+			selection = "thread_id in " + threadIDs;
+		}		
+		
+		asyncQuery.startQuery(0, mAdapter, Sms.CONVERSATION_URI, projection, selection, null, "date desc"); 		
+	}
 		
 		
 		
@@ -303,7 +312,7 @@ public class ConversationUI extends Activity implements OnItemClickListener, OnC
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case SEARCH_ID:		// 搜索菜单被选中
-			
+			onSearchRequested();	// 呼出搜索对话框
 			break;
 		case EDIT_ID:		// 编辑菜单
 			currentState = EDIT_STATE;
