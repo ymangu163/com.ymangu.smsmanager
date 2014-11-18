@@ -4,10 +4,16 @@ package com.ymangu.smsmanager;
 import com.ymangu.smsmanager.view.ConversationUI;
 import com.ymangu.smsmanager.view.FolderUI;
 import com.ymangu.smsmanager.view.GroupUI;
+
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 
 import android.app.TabActivity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.database.Cursor;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,15 +36,8 @@ public class MainActivity extends TabActivity implements OnClickListener {
 		
 		setContentView(R.layout.activity_main);
 		initTabHost();
-		
-		
-		
-		
-		
-		
-		
-		
-		
+	    //创建快捷图标
+		createShortCut();
 	}
 	
 	/**
@@ -81,12 +80,7 @@ public class MainActivity extends TabActivity implements OnClickListener {
 				
 				basicWidth = findViewById(R.id.rl_conversation).getWidth(); //得到一等份的宽度，滑动背景时要用
 			}
-		});
-		
-		
-		
-		
-		
+		});		
 		
 		addTabSpec("conversation","会话",R.drawable.tab_conversation,new Intent(this,ConversationUI.class));
 		addTabSpec("folder", "文件夹", R.drawable.tab_folder, new Intent(this,FolderUI.class));
@@ -159,6 +153,59 @@ public class MainActivity extends TabActivity implements OnClickListener {
 		translateAnimation.setFillAfter(true);// 执行完成后停留在动画结束的位置上
 		mSlideView.startAnimation(translateAnimation);
 	}
-
-
+	
+	//创建快捷图标
+	private void createShortCut(){
+		//先判断该快捷图标是否存在
+		if(isExist()){
+			Log.d("1", "已有图标，返回了");
+			return ;
+		}
+		Log.d("1", "运行到这了");
+		Intent intent=new Intent();
+		intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+		Parcelable icon=Intent.ShortcutIconResource.fromContext(this, R.drawable.tab_folder);
+		intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, icon);  //设置快捷方式的图标
+		Log.d("1", "运行到这了222");
+		//指定快捷方式的名称
+		intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, "短信管理器");		
+		//指定快捷图标激活哪一个activity，只有主Activity才能被激活
+		Intent intent2=new Intent();
+		intent2.setAction(Intent.ACTION_MAIN);
+		intent2.addCategory(Intent.CATEGORY_LAUNCHER);
+		ComponentName component=new ComponentName(this,MainActivity.class);
+		intent2.setComponent(component);		
+		intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, intent2);
+		sendBroadcast(intent);  //发送广播
+		Log.d("1", "运行到这了333");
+		
+		
+	}
+	
+	private boolean isExist(){
+		boolean isExist=false;
+		int version=getSdkVersion();
+		Log.d("1", "版本号是" + version);
+		Uri uri=null;
+		if(version<2.0){
+		 uri=Uri.parse("content://com.android.launcher.settings/favorites");			
+		}else{
+			uri=Uri.parse("content://com.android.launcher2.settings/favorites");
+		}
+		String selection=" title=? ";
+		String[] selectionArgs=new String[]{"短信管理器"};
+		Cursor cursor=getContentResolver().query(uri, null, selection, selectionArgs, null);
+		if(cursor.getCount()>0){
+			isExist=true;
+		}
+		cursor.close();		
+		return isExist;
+	}
+	
+	 /*** 得到当前系统sdk版本     */
+	private int getSdkVersion(){		
+		return android.os.Build.VERSION.SDK_INT;
+	}
+	
+	
 }
